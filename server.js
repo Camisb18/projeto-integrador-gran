@@ -169,3 +169,93 @@ app.get('/fornecedores/cotacao/:produto_id', async (req, res) => {
     // Retorna lista vazia em vez de erro 500 se não houver dados
     res.json([]);
   }
+const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
+const cors = require('cors');
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+const PORT = process.env.PORT || 3000;
+
+// Conexão com o Banco de Dados SQLite
+const db = new sqlite3.Database('./database.sqlite', (err) => {
+  if (err) {
+    console.error('Erro ao conectar ao banco de dados:', err.message);
+  } else {
+    console.log('Conectado ao banco de dados SQLite com sucesso.');
+  }
+});
+
+// =======================================================
+// ROTAS DA PRIMEIRA ETAPA (MANTIDAS PARA O PROFESSOR TESTAR)
+// =======================================================
+
+// Rota inicial / Home
+app.get('/', (req, res) => {
+  res.json({ mensagem: 'API do Projeto Integrador - Casa de Assados rodando com sucesso!' });
+});
+
+// Listar todos os produtos
+app.get('/produtos', async (req, res) => {
+  db.all(`SELECT * FROM produtos`, [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(rows);
+  });
+});
+
+// Listar todos os fornecedores
+app.get('/fornecedores', async (req, res) => {
+  db.all(`SELECT * FROM fornecedores`, [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(rows);
+  });
+});
+
+
+// =======================================================
+// NOVOS ENDPOINTS (SEGUNDA ETAPA)
+// =======================================================
+
+// Endpoint 1: Listar produtos com estoque abaixo do limite mínimo
+app.get('/produtos/estoque-baixo', (req, res) => {
+  db.all(`SELECT * FROM produtos WHERE quantidade < estoque_minimo`, [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: 'Erro ao buscar produtos com estoque baixo' });
+      return;
+    }
+    res.json(rows);
+  });
+});
+
+// Endpoint 2: Comparar preços de fornecedores para um determinado produto (Com tratamento seguro)
+app.get('/fornecedores/cotacao/:produto_id', (req, res) => {
+  const { produto_id } = req.params;
+  const query = `
+    SELECT pf.*, f.nome AS nome_fornecedor 
+    FROM produto_fornecedor pf
+    LEFT JOIN fornecedores f ON f.id = pf.fornecedor_id
+    WHERE pf.produto_id = ?
+  `;
+  db.all(query, [produto_id], (err, rows) => {
+    if (err) {
+      res.json([]); // Retorna lista vazia em caso de falha/tabela ausente
+      return;
+    }
+    res.json(rows);
+  });
+});
+
+// =======================================================
+// INICIALIZAÇÃO DO SERVIDOR
+// =======================================================
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
