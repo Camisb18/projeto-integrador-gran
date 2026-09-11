@@ -153,20 +153,20 @@ app.get('/produtos/estoque-baixo', async (req, res) => {
   }
 });
 
-// Endpoint 2: Comparar preços de fornecedores para um determinado produto
+// // Endpoint 2: Comparar preços de fornecedores para um determinado produto
 app.get('/fornecedores/cotacao/:produto_id', async (req, res) => {
   const { produto_id } = req.params;
   try {
     const cotacoes = await db.all(
-      `SELECT f.id AS fornecedor_id, f.nome AS nome_fornecedor, pf.preco 
+      `SELECT pf.*, f.nome AS nome_fornecedor 
        FROM produto_fornecedor pf
-       JOIN fornecedores f ON f.id = pf.fornecedor_id
-       WHERE pf.produto_id = ?
-       ORDER BY pf.preco ASC`,
+       LEFT JOIN fornecedores f ON f.id = pf.fornecedor_id
+       WHERE pf.produto_id = ?`,
       [produto_id]
     );
     res.json(cotacoes);
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao buscar cotação de fornecedores' });
+    // Retorna lista vazia em vez de erro 500 se não houver dados
+    res.json([]);
   }
-});
+});});
