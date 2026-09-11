@@ -4,7 +4,8 @@ const setupDatabase = require('./database');
 const app = express();
 app.use(express.json());
 
-const PORT = 3000;
+// Permite usar a porta dinâmica do Render ou a 3000 localmente
+const PORT = process.env.PORT || 3000;
 
 let db;
 setupDatabase().then(database => {
@@ -14,7 +15,7 @@ setupDatabase().then(database => {
     }
     db = database;
     app.listen(PORT, () => {
-        console.log(`Servidor rodando em http://localhost:${PORT}/`);
+        console.log(`Servidor rodando na porta ${PORT}`);
     });
 }).catch(err => {
     console.error("Erro na inicialização:", err);
