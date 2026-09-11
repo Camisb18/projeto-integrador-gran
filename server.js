@@ -141,4 +141,32 @@ app.get('/fornecedores/:id/produtos', async (req, res) => {
         WHERE pf.fornecedor_id = ?
     `, [id]);
     res.json(produtos);
+});// Endpoint 1: Listar produtos com estoque abaixo do limite mínimo
+app.get('/produtos/estoque-baixo', async (req, res) => {
+  try {
+    const produtos = await db.all(
+      `SELECT * FROM produtos WHERE quantidade < estoque_minimo`
+    );
+    res.json(produtos);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar produtos com estoque baixo' });
+  }
+});
+
+// Endpoint 2: Comparar preços de fornecedores para um determinado produto
+app.get('/fornecedores/cotacao/:produto_id', async (req, res) => {
+  const { produto_id } = req.params;
+  try {
+    const cotacoes = await db.all(
+      `SELECT f.id AS fornecedor_id, f.nome AS nome_fornecedor, pf.preco 
+       FROM produto_fornecedor pf
+       JOIN fornecedores f ON f.id = pf.fornecedor_id
+       WHERE pf.produto_id = ?
+       ORDER BY pf.preco ASC`,
+      [produto_id]
+    );
+    res.json(cotacoes);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar cotação de fornecedores' });
+  }
 });
