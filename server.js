@@ -169,4 +169,3 @@ app.get('/fornecedores/cotacao/:produto_id', async (req, res) => {
     // Retorna lista vazia em vez de erro 500 se não houver dados
     res.json([]);
   }
-});});
